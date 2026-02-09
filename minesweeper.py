@@ -50,9 +50,16 @@ def iniciar_partida():
     Ajustamos todo para reiniciar una partida,
     en caso que haya terminado recien una
     """
+    # Variables globales para el tablero y las minas
     global tablero
-    tablero = generar_tablero(16) # generamos el tablero
+    global matriz_minas
+    
+    tablero = generar_tablero(9) # generamos el tablero
+    matriz_minas = generar_minas(9, 10) # generamos las minas
+    
     imprimir_tablero() # imprimimos el tablero
+    pedir_coordenada() # pedimos una coordenada al usuario
+    
     return
 
 
@@ -137,33 +144,49 @@ def pedir_coordenada():
     """
     Pide una coordenada al usuario
     """
-    coordenada = input("Coordenada: ")
-    if not (len(coordenada) == 2 and coordenada[0].isalpha() and coordenada[1].isdigit()):
-        print("Coordenada inválida")
-        return pedir_coordenada()
-    if esta_revelada(coordenada):
-        print("La casilla ya ha sido revelada")
-    elif es_mina(coordenada):
-        print("La casilla es una mina")
-    return coordenada
+    mensaje_error = "" # variable para almacenar el mensaje de error, si es necesario
+    
+    while True:
+        os.system('cls' if os.name == 'nt' else 'clear') # limpiamos la pantalla para que se vea mejor    
 
-def partida(opcion):
+        imprimir_tablero() # imprimimos el tablero
+        
+        if mensaje_error:
+            print(mensaje_error) # imprimimos el mensaje de error si existe
+            mensaje_error = "" # reseteamos el mensaje de error para la siguiente iteración
+        
+        coord = input("Ingrese una coordenada, sin espacios (ej.: A1): ").upper() # pedimos la coordenada
+        
+        # Validación de formato y longitud
+        if len(coord) < 2 or len(coord) > 3 or not (coord[0].isalpha() and coord[1:].isdigit()):
+            mensaje_error = "Coordenada inválida. Intente de nuevo"
+            time.sleep(1)
+            continue
+        
+        # Extraemos la letra y el número de la coordenada
+        letra = coord[0]
+        numero = int(coord[1:])
+        
+        limite_letras = chr(64 + len(tablero)) # letra máxima permitida según el tamaño del tablero
+        
+        # Validación de rango. Debería ser A-P y 1-16
+        if not ('A' <= letra <= limite_letras and 1 <= numero <= len(tablero)):
+            mensaje_error = "Coordenada fuera de rango. Intente de nuevo"
+            time.sleep(1)
+            continue
+        
+        # Validación de que la coordenada no exista
+        if esta_revelada(coord):
+            mensaje_error = "La casilla ya ha sido revelada. Intente de nuevo"
+            time.sleep(1)
+            continue
+    return coord
+
+def partida():
     """
     Mantiene el juego hasta que pierda o gane
     """
-    while True:
-        coordenada = pedir_coordenada()
-        if esta_revelada(coordenada):
-            print("La casilla ya ha sido revelada")
-        elif es_mina(coordenada):
-            print("La casilla es una mina")
-        else:
-            print("La casilla no es una mina")
-        
-        if es_mina(coordenada):
-            mostrar_minas()
-        else:
-            mostrar_contenido(coordenada)
+    
     return
 
 def menu():
@@ -195,5 +218,4 @@ def menu():
     return
 
 
-#menu() #ejecución
-iniciar_partida()
+menu() #ejecución
