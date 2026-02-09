@@ -55,13 +55,13 @@ def es_mina():
     return
 
 def vecinos():
-   """
+    """
     Recopila todos los vecinos de una casilla,
     verificando que no invente vecinos,
     osea que no vaya a crear casillas fuera del tablero
     (si la casilla esta en la orilla por ejemplo)
     """
-   return
+    return
 
 def contar_minas():
     """
@@ -122,10 +122,10 @@ def partida():
     return
 
 def menu():
-   """
+    """
     Opciones de inicio
     """
-   return
+    return
 
 
 menu() #ejecución

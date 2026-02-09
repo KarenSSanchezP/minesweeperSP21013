@@ -3,7 +3,7 @@ import os
 import time
 
 #Variables global del tablero
-tablero = []
+tablero = [] # matriz del tablero
 
 
 def generar_minas(filas_cols, num_minas):
@@ -20,21 +20,39 @@ def imprimir_tablero():
     Imprime el tablero, 
     lo convierte de matriz a algo entendible para el usuario
     """
-    return
+    letras = [chr(65+i) for i in range(len(tablero))] # lista de letras para identificar las filas
+    numeros = list(range(1, len(tablero)+1)) # lista de numeros para identificar las columnas
+    
+    for i in range(len(numeros)): # imprimimos la numeracion de las columnas
+        print(" " if numeros[i] < 10 else "", numeros[i], end="") # imprimimos el numero de la fila
+    print() # salto de linea
+    for i in range(len(tablero)): # imprimimos la identificacion de las filas y el contenido del tablero
+        print(letras[i], end=" ")
+        for j in range(len(tablero[i])):
+            print(tablero[i][j], end="  ")
+        print()
+    return tablero
 
-def generar_tablero():
+def generar_tablero(filas_cols):
     """
     Crea el tablero con las filas y columnas numeradas
     inicialmente pone todas las casillas con un punto
     """
-    
-    return
+    tablero_temp = [] # matriz del tablero temporal
+    for i in range(filas_cols): 
+        tablero_temp.append([]) # se agrega una nueva fila
+        for j in range(filas_cols): 
+            tablero_temp[i].append(".") # se agrega una nueva columna
+    return tablero_temp
 
 def iniciar_partida():
     """
     Ajustamos todo para reiniciar una partida,
     en caso que haya terminado recien una
     """
+    global tablero
+    tablero = generar_tablero(16) # generamos el tablero
+    imprimir_tablero() # imprimimos el tablero
     return
 
 
@@ -45,17 +63,23 @@ def buscar_coordenada():
     return
 
 
-def esta_revelada():
+def esta_revelada(coordenada):
     """
     Verifica si la coordenada ya ha sido revelada
     """
-    return
+    if coordenada in tablero:
+        return True
+    else:
+        return False
 
-def es_mina():
+def es_mina(coordenada):
     """
     Verifica si una coordenada corresponde a una mina
     """
-    return
+    if coordenada in minas:
+        return True
+    else:
+        return False
 
 def vecinos():
     """
@@ -109,20 +133,24 @@ def revelar_coordenada(coordenada):
     """
     return
 
-
-
-
 def pedir_coordenada():
     """
     Pide una coordenada al usuario
     """
-    return
+    coordenada = input("Coordenada: ")
+    if not (len(coordenada) == 2 and coordenada[0].isalpha() and coordenada[1].isdigit()):
+        print("Coordenada inválida")
+        return pedir_coordenada()
+    if esta_revelada(coordenada):
+        print("La casilla ya ha sido revelada")
+    elif es_mina(coordenada):
+        print("La casilla es una mina")
+    return coordenada
 
-def partida():
+def partida(opcion):
     """
     Mantiene el juego hasta que pierda o gane
     """
-    tablero = generar_tablero()
     while True:
         coordenada = pedir_coordenada()
         if esta_revelada(coordenada):
@@ -153,9 +181,9 @@ def menu():
     
     opcion = input("Opcion: ")
     if opcion == "1":
-        partida()
+        partida(opcion)
     elif opcion == "2":
-        partida()
+        partida(opcion)
     elif opcion == "3":
         print("Gracias por jugar")
         time.sleep(1)
@@ -167,4 +195,5 @@ def menu():
     return
 
 
-menu() #ejecución
+#menu() #ejecución
+iniciar_partida()
