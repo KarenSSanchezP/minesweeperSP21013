@@ -45,7 +45,7 @@ def generar_tablero(filas_cols):
             tablero_temp[i].append(".") # se agrega una nueva columna
     return tablero_temp
 
-def iniciar_partida():
+def iniciar_partida(dimension, num_minas):
     """
     Ajustamos todo para reiniciar una partida,
     en caso que haya terminado recien una
@@ -54,60 +54,108 @@ def iniciar_partida():
     global tablero
     global matriz_minas
     
-    tablero = generar_tablero(9) # generamos el tablero
-    matriz_minas = generar_minas(9, 10) # generamos las minas
+    tablero = generar_tablero(dimension) # generamos el tablero
+    matriz_minas = generar_minas(dimension, num_minas) # generamos las minas
     
     imprimir_tablero() # imprimimos el tablero
-    pedir_coordenada() # pedimos una coordenada al usuario
     
     return
 
 
-def buscar_coordenada():
+def traducir_coordenada(coordenada):
     """
-    Valida que la coordenada exista
+    Traduce una coordenada de la forma A1 a 0,0 
+    para poder usarla en la matriz del tablero
     """
-    return
+    letra = coordenada[0]
+    numero = int(coordenada[1:])
+    
+    fila = ord(letra) - 65 # convertimos la letra a un numero (A=0, B=1, etc.)
+    columna = numero - 1 # convertimos el numero a un indice de columna (1=0, 2=1, etc.)
+    
+    return fila, columna
 
 
 def esta_revelada(coordenada):
     """
     Verifica si la coordenada ya ha sido revelada
     """
-    if coordenada in tablero:
+    fila, columna = traducir_coordenada(coordenada) # traducimos la coordenada a indices de fila y columna
+    
+    if tablero[fila][columna] != ".": # verificamos si la casilla ya ha sido revelada (si no es un punto)
         return True
-    else:
-        return False
+    return False
 
 def es_mina(coordenada):
     """
     Verifica si una coordenada corresponde a una mina
     """
-    if coordenada in minas:
+    fila, columna = traducir_coordenada(coordenada) # traducimos la coordenada a indices de fila y columna
+    
+    if matriz_minas[fila][columna]: # verificamos si hay una mina en esa coordenada
         return True
     else:
         return False
 
-def vecinos():
+def vecinos(fila, columna):
     """
     Recopila todos los vecinos de una casilla,
     verificando que no invente vecinos,
     osea que no vaya a crear casillas fuera del tablero
     (si la casilla esta en la orilla por ejemplo)
     """
-    return
+    lista_vecinos = [] # lista de vecinos
+    
+    # Recorremos cada casilla del tablero que rodea a la casilla dada
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            vecino_fila = fila + i # calculamos la fila del vecino
+            vecino_columna = columna + j # calculamos la columna del vecino
+            
+            if i == 0 and j == 0: # si es la misma casilla, no se agrega
+                continue
+            
+            # Validamos que la coordenada del vecino sea válida
+            if not (0 <= vecino_fila < len(tablero) and 0 <= vecino_columna < len(tablero[0])):
+                continue
+            
+            tupla_vecino = (vecino_fila, vecino_columna) # guardamos la coordenada del vecino
+            lista_vecinos.append(tupla_vecino) # agregamos la coordenada al listado de vecinos
+    
+    return lista_vecinos
 
-def contar_minas():
+def contar_minas(fila, columna):
     """
     Cuenta el numero de minas alrededor de una casilla
     """
-    return
+    minas_cercanas = 0 # contador de minas cercanas
+    mis_vecinos = vecinos(fila, columna) # obtenemos la lista de vecinos de la casilla dada
+    
+    for vecino in mis_vecinos: # recorremos cada vecino
+        fila_vecino, columna_vecino = vecino # extraemos la coordenada del vecino
+        
+        if matriz_minas[fila_vecino][columna_vecino]: # si el vecino es una mina, sumamos 1
+            minas_cercanas += 1
+    return minas_cercanas
 
-def desplazar_mina():
+def desplazar_mina(coordenada):
     """
     Si es el primer movimiento
     mueve la mina a otra casilla
     """
+    if es_mina(coordenada):
+        fila, columna = traducir_coordenada(coordenada)
+        matriz_minas[fila][columna] = False # cambiamos la mina a False
+        
+        # Obtenemos la lista de vecinos de la casilla
+        vecinos_a_desplazar = vecinos(fila, columna)
+        
+        # Recorremos cada vecino y lo desplazamos
+        for vecino in vecinos_a_desplazar:
+            fila_vecino, columna_vecino = vecino
+            if matriz_minas[fila_vecino][columna_vecino] == False: # cambiamos el vecino a 
+                matriz_minas[fila_vecino][columna_vecino] = True
+                break # una vez que desplazamos la mina, salimos del bucle
     return
 
 
@@ -122,6 +170,31 @@ def mostrar_contenido(coordenada):
     e ir añadiendo los vecinos hasta que no hayan más
     valores libres en el perímetro
     """
+    fila, columna = traducir_coordenada(coordenada)
+    pendientes = [(fila, columna)] # pila de casillas pendientes por revelar
+    
+    while pendientes:
+        fila, columna = pendientes.pop() # sacamos la casilla de la pila
+        
+        if tablero[fila][columna] != ".": # si ya se ha revelado, no se muestra
+            continue 
+        
+        if matriz_minas[fila][columna]: # si es una mina, no se muestra
+            continue 
+        
+        minas_cercanas = contar_minas(fila, columna) # contamos las minas cercanas
+        
+        if minas_cercanas > 0: # mostramos el número de minas cercanas
+            tablero[fila][columna] = str(minas_cercanas) 
+        elif minas_cercanas == 0: # si no hay minas cercanas, agregamos los vecinos a la pila
+            vecinos_a_revelar = vecinos(fila, columna) # obtenemos la lista de vecinos de la casilla
+            tablero[fila][columna] = " " # cambiamos el contenido 
+            
+            for vecino in vecinos_a_revelar: # recorremos cada vecino
+                fila_vecino, columna_vecino = vecino
+                # si el vecino no ha sido revelado, lo agregamos a la pila
+                if tablero[fila_vecino][columna_vecino] == ".":
+                    pendientes.append((fila_vecino, columna_vecino))
     return
 
 def mostrar_minas():
@@ -182,7 +255,7 @@ def pedir_coordenada():
             continue
     return coord
 
-def partida():
+def partida(opcion):
     """
     Mantiene el juego hasta que pierda o gane
     """
@@ -217,5 +290,4 @@ def menu():
         menu()
     return
 
-
-menu() #ejecución
+#menu() #ejecución
